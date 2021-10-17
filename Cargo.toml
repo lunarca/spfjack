@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 trust-dns-client = "0.20.3"
+decon-spf = "0.1.0"
