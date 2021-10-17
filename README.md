@@ -11,6 +11,6 @@ The list of planned misconfigurations is as follows:
 - `+all` mechanism existing.
 - `ip4`, `ip6`, or `a` mechanisms with hosts containing open SMTP relays.
 - `a`, `mx`, and `ptr` mechanisms for domains that are not registered.
-- `exists` mechanisms existing.
+- `exists` mechanisms existing. This can be a bit more complicated, see the [SPF Domain spec](https://datatracker.ietf.org/doc/html/rfc7208#section-7.1) and the `_spf.salesforce.com` record
 - `include` mechanisms for domains that are not registered. Recursively evaluate the SPF record for the `include` specified domain.
 - `redirect` modifier for domains that are not registered. Recursively evaluate the SPF record for the `redirect` specified domain.
