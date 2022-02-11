@@ -1,4 +1,5 @@
 mod spf;
+mod actors;
 
 use actix::System;
 use clap::{Arg, App, ArgMatches};
