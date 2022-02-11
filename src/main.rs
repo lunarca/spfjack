@@ -1,12 +1,14 @@
 mod spf;
 
+use actix::System;
 use clap::{Arg, App, ArgMatches};
 use trust_dns_resolver::Resolver;
 use trust_dns_resolver::{config::*};
+use actix_rt;
 
 
-
-fn main() {
+#[actix_rt::main]
+async fn main() {
     let args_matcher = parse_args();
 
     let domain: String = String::from(args_matcher.value_of("domain").unwrap());
@@ -16,6 +18,8 @@ fn main() {
 
     let spf_record = spf::fetch_and_parse(resolver, domain);
     println!("SPF Record: {:?}", spf_record);
+
+    System::current().stop();
 }
 
 
