@@ -1,16 +1,14 @@
 
 use decon_spf::spf::Spf;
-use trust_dns_resolver::error::ResolveResult;
 use trust_dns_resolver::Resolver;
-use trust_dns_resolver::{config::*, lookup::TxtLookup};
+use trust_dns_resolver::lookup::TxtLookup;
 
-pub fn fetch_and_parse(domain: &str) -> Result<Spf, String> {
-  fetch_txt_records(domain)
+pub fn fetch_and_parse(resolver: Resolver, domain: String) -> Result<Spf, String> {
+  fetch_txt_records(resolver, domain)
     .and_then(select_spf_record)
 }
 
-fn fetch_txt_records(domain: &str) -> Result<TxtLookup, String> {
-  let resolver = Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap();
+fn fetch_txt_records(resolver: Resolver, domain: String) -> Result<TxtLookup, String> {
   match resolver.txt_lookup(domain) {
     Err(_) => Err(String::from("No TXT records")),
     Ok(txt_record) => Ok(txt_record)
