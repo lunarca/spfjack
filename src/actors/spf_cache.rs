@@ -43,7 +43,7 @@ impl Handler<QueryCacheMessage> for SpfCacheActor {
     
     fn handle(&mut self, msg: QueryCacheMessage, _ctx: &mut Context<Self>) -> Self::Result {
         match self.cache.get(&msg.domain) {
-            Some(spf_ref) => Some(spf_ref.clone()),
+            Some(spf_ref) => Some(Rc::clone(spf_ref)),
             None => None,
         }
     }
