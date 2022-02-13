@@ -1,0 +1,19 @@
+{
+  "name": "spfjack",
+  "version": "0.0.1",
+  "description": "Review SPF records for misconfiguraiton that could result in email spoofing",
+  "main": "target/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lunarca/spfjack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lunarca/spfjack/issues"
+  },
+  "homepage": "https://github.com/lunarca/spfjack#readme"
+}
