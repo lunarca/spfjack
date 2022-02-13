@@ -14,7 +14,7 @@ use actors::spf_cache;
 async fn main() {
     let args_matcher = parse_args();
 
-    let spf_cache_addr = spf_cache::start();
+    let spf_cache_addr = spf_cache::start_link();
 
     let domain: String = String::from(args_matcher.value_of("domain").unwrap());
 

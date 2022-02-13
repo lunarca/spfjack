@@ -49,7 +49,7 @@ impl Handler<QueryCacheMessage> for SpfCacheActor {
     }
 }
 
-pub fn start() -> Addr<SpfCacheActor> {
+pub fn start_link() -> Addr<SpfCacheActor> {
     return SpfCacheActor { cache: HashMap::new()}.start();
 }
 
