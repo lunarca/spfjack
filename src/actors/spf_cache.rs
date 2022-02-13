@@ -7,8 +7,8 @@ type QueryCacheResponse = Option<Rc<Spf>>;
 
 // Message to insert an item to the cache
 pub struct InsertCacheMessage {
-    domain: String,
-    value: Spf,
+    pub domain: String,
+    pub value: Spf,
 }
 impl Message for InsertCacheMessage {
     type Result = InsertCacheResponse;
@@ -16,7 +16,7 @@ impl Message for InsertCacheMessage {
 
 // Message to extract an item from the cache
 pub struct QueryCacheMessage {
-    domain: String,
+    pub domain: String,
 }
 impl Message for QueryCacheMessage {
     type Result = QueryCacheResponse;
