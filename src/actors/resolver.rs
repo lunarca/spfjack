@@ -1,5 +1,5 @@
 use actix::prelude::*;
-use trust_dns_resolver::{Resolver, lookup::{TxtLookup, Ipv4Lookup}, error::ResolveError};
+use trust_dns_resolver::{Resolver, lookup::*, error::ResolveError};
 
 
 //------
