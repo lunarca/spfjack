@@ -54,3 +54,21 @@ impl Handler<ResolveAMessage> for DnsResolverActor {
         return self.resolver.ipv4_lookup(msg.dns_name);
     }
 }
+
+type ResolveAaaaMessageResponse = Result<Ipv6Lookup, ResolveError>;
+
+pub struct ResolveAaaaMessage {
+    pub dns_name: String,
+}
+
+impl Message for ResolveAaaaMessage {
+    type Result = ResolveAaaaMessageResponse;
+}
+
+impl Handler<ResolveAaaaMessage> for DnsResolverActor {
+    type Result = ResolveAaaaMessageResponse;
+
+    fn handle(&mut self, msg: ResolveAaaaMessage, _ctx: &mut Context<Self>) -> Self::Result {
+        return self.resolver.ipv6_lookup(msg.dns_name);
+    }
+}
