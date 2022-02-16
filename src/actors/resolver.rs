@@ -1,5 +1,5 @@
 use actix::prelude::*;
-use trust_dns_resolver::{Resolver, lookup::TxtLookup, error::ResolveError};
+use trust_dns_resolver::{Resolver, lookup::{TxtLookup, Ipv4Lookup}, error::ResolveError};
 
 
 //------
@@ -37,7 +37,7 @@ impl Handler<ResolveTxtMessage> for DnsResolverActor {
 }
 
 
-type ResolveAMessageResponse = Result<TxtLookup, ResolveError>;
+type ResolveAMessageResponse = Result<Ipv4Lookup, ResolveError>;
 
 pub struct ResolveAMessage {
     pub dns_name: String,
@@ -51,6 +51,6 @@ impl Handler<ResolveAMessage> for DnsResolverActor {
     type Result = ResolveAMessageResponse;
 
     fn handle(&mut self, msg: ResolveAMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        
+        return self.resolver.ipv4_lookup(msg.dns_name);
     }
 }
