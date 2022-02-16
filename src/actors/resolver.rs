@@ -36,7 +36,8 @@ impl Handler<ResolveTxtMessage> for DnsResolverActor {
     }
 }
 
-
+//-----
+// Resolve an A Record
 type ResolveAMessageResponse = Result<Ipv4Lookup, ResolveError>;
 
 pub struct ResolveAMessage {
@@ -55,6 +56,8 @@ impl Handler<ResolveAMessage> for DnsResolverActor {
     }
 }
 
+//-----
+// Resolve an AAAA Record
 type ResolveAaaaMessageResponse = Result<Ipv6Lookup, ResolveError>;
 
 pub struct ResolveAaaaMessage {
