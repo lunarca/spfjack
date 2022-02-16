@@ -1,5 +1,10 @@
 use actix::prelude::*;
-use trust_dns_resolver::{Resolver, lookup::*, error::ResolveError, config::{ResolverConfig, ResolverOpts}};
+use trust_dns_resolver::{
+    Resolver, 
+    lookup::*, 
+    error::ResolveError, 
+    config::{ResolverConfig, ResolverOpts}
+};
 
 
 //------

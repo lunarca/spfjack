@@ -1,7 +1,7 @@
 mod spf;
 mod actors;
 
-use actix::{prelude::*, System};
+use actix::System;
 use clap::{Arg, App, ArgMatches};
 use trust_dns_resolver::Resolver;
 use trust_dns_resolver::{config::*};
