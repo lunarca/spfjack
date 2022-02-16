@@ -1,5 +1,5 @@
 use actix::prelude::*;
-use trust_dns_resolver::{Resolver, lookup::*, error::ResolveError};
+use trust_dns_resolver::{Resolver, lookup::*, error::ResolveError, config::{ResolverConfig, ResolverOpts}};
 
 
 //------
@@ -74,4 +74,30 @@ impl Handler<ResolveAaaaMessage> for DnsResolverActor {
     fn handle(&mut self, msg: ResolveAaaaMessage, _ctx: &mut Context<Self>) -> Self::Result {
         return self.resolver.ipv6_lookup(msg.dns_name);
     }
+}
+
+//-----
+// Resolve an MX record
+type ResolveMxMessageResponse = Result<MxLookup, ResolveError>;
+
+pub struct ResolveMxMessage {
+    pub dns_name: String,
+}
+
+impl Message for ResolveMxMessage {
+    type Result = ResolveMxMessageResponse;
+}
+
+impl Handler<ResolveMxMessage> for DnsResolverActor {
+    type Result = ResolveMxMessageResponse;
+
+    fn handle(&mut self, msg: ResolveMxMessage, _ctx: &mut Context<Self>) -> Self::Result {
+        return self.resolver.mx_lookup(msg.dns_name);
+    }
+}
+
+//-----
+/// Primary function to start the DnsResolverActor Actor
+pub fn start_link() -> Addr<DnsResolverActor> {
+    return DnsResolverActor { resolver: Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap()}.start();
 }
