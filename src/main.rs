@@ -1,21 +1,29 @@
 mod spf;
+mod actors;
 
+use actix::{prelude::*, System};
 use clap::{Arg, App, ArgMatches};
 use trust_dns_resolver::Resolver;
 use trust_dns_resolver::{config::*};
+use actix_rt;
+
+use actors::spf_cache;
 
 
-
-fn main() {
+#[actix_rt::main]
+async fn main() {
     let args_matcher = parse_args();
+
+    let spf_cache_addr = spf_cache::start_link();
 
     let domain: String = String::from(args_matcher.value_of("domain").unwrap());
 
     let resolver = Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap();
 
-
     let spf_record = spf::fetch_and_parse(resolver, domain);
     println!("SPF Record: {:?}", spf_record);
+
+    System::current().stop();
 }
 
 
