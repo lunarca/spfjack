@@ -3,6 +3,8 @@ use decon_spf::spf::Spf;
 use trust_dns_resolver::Resolver;
 use trust_dns_resolver::lookup::TxtLookup;
 
+pub mod processing_results;
+
 pub fn fetch_and_parse(resolver: Resolver, domain: String) -> Result<Spf, String> {
   fetch_txt_records(resolver, domain)
     .and_then(select_spf_record)
