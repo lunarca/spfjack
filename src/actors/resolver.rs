@@ -1,10 +1,13 @@
 use actix::prelude::*;
+use decon_spf::spf::Spf;
 use trust_dns_resolver::{
     Resolver, 
     lookup::*, 
     error::ResolveError, 
     config::{ResolverConfig, ResolverOpts}
 };
+
+use crate::spf::{self, SpfFetchError};
 
 
 //------
@@ -98,6 +101,26 @@ impl Handler<ResolveMxMessage> for DnsResolverActor {
 
     fn handle(&mut self, msg: ResolveMxMessage, _ctx: &mut Context<Self>) -> Self::Result {
         return self.resolver.mx_lookup(msg.dns_name);
+    }
+}
+
+//-----
+// Extract an SPF record for a domain
+type FetchSfpRecordMessageResponse = Result<Spf, SpfFetchError>;
+
+pub struct FetchSfpRecordMessage {
+    dns_name: String,
+}
+
+impl Message for FetchSfpRecordMessage {
+    type Result = FetchSfpRecordMessageResponse;
+}
+
+impl Handler<FetchSfpRecordMessage> for DnsResolverActor {
+    type Result = FetchSfpRecordMessageResponse;
+
+    fn handle(&mut self, msg: FetchSfpRecordMessage, _ctx: &mut Context<Self>) -> Self::Result {
+        spf::fetch_and_parse(self.resolver, msg.dns_name)
     }
 }
 
