@@ -20,8 +20,11 @@ async fn main() {
 
     let resolver = Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap();
 
-    let spf_record = spf::fetch_and_parse(resolver, domain);
-    println!("SPF Record: {:?}", spf_record);
+    let spf_record = spf::fetch_and_parse(&resolver, domain);
+    match spf_record {
+        Ok(record) => println!("SPF Record: {}", record.source()),
+        Err(_error) => println!("Error")
+    }
 
     System::current().stop();
 }

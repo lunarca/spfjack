@@ -1,16 +1,15 @@
-
 use decon_spf::spf::{Spf, SpfErrorType};
 use trust_dns_resolver::Resolver;
 use trust_dns_resolver::lookup::TxtLookup;
 
 pub mod processing_results;
 
-pub fn fetch_and_parse(resolver: Resolver, domain: String) -> Result<Spf, SpfFetchError> {
+pub fn fetch_and_parse(resolver: &Resolver, domain: String) -> Result<Spf, SpfFetchError> {
   fetch_txt_records(resolver, domain)
     .and_then(select_spf_record)
 }
 
-fn fetch_txt_records(resolver: Resolver, domain: String) -> Result<TxtLookup, SpfFetchError> {
+fn fetch_txt_records(resolver: &Resolver, domain: String) -> Result<TxtLookup, SpfFetchError> {
   match resolver.txt_lookup(domain) {
     Err(_) => Err(SpfFetchError::NoTxtRecords),
     Ok(txt_record) => Ok(txt_record)
