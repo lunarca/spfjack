@@ -1,4 +1,4 @@
-use decon_spf::spf::mechanism::Mechanism;
+use decon_spf::mechanism::Mechanism;
 
 pub struct MechanismProcessingResult<T> {
     mechanism_type: MechanismType,

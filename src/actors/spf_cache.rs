@@ -1,9 +1,9 @@
 use actix::prelude::*;
-use decon_spf::spf::Spf;
-use std::{collections::HashMap, rc::Rc};
+use decon_spf::Spf;
+use std::{collections::HashMap, sync::Arc};
 
 type InsertCacheResponse = ();
-type QueryCacheResponse = Option<Rc<Spf>>;
+type QueryCacheResponse = Option<Arc<Spf>>;
 
 // Message to insert an item to the cache
 pub struct InsertCacheMessage {
@@ -23,7 +23,7 @@ impl Message for QueryCacheMessage {
 }
 
 pub struct SpfCacheActor {
-    cache: HashMap<String, Rc<Spf>>
+    cache: HashMap<String, Arc<Spf>>
 }
 
 impl Actor for SpfCacheActor {
@@ -34,7 +34,7 @@ impl Handler<InsertCacheMessage> for SpfCacheActor {
     type Result = InsertCacheResponse;
 
     fn handle(&mut self, msg: InsertCacheMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        self.cache.insert(msg.domain, Rc::new(msg.value));
+        self.cache.insert(msg.domain, Arc::new(msg.value));
     }
 }
 
@@ -43,7 +43,7 @@ impl Handler<QueryCacheMessage> for SpfCacheActor {
     
     fn handle(&mut self, msg: QueryCacheMessage, _ctx: &mut Context<Self>) -> Self::Result {
         match self.cache.get(&msg.domain) {
-            Some(spf_ref) => Some(Rc::clone(spf_ref)),
+            Some(spf_ref) => Some(Arc::clone(spf_ref)),
             None => None,
         }
     }
