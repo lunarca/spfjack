@@ -1,5 +1,5 @@
 use actix::prelude::*;
-use decon_spf::spf::Spf;
+use decon_spf::Spf;
 use trust_dns_resolver::{
     Resolver, 
     lookup::*, 
@@ -9,11 +9,14 @@ use trust_dns_resolver::{
 
 use crate::spf::{self, SpfFetchError};
 
+use super::spf_cache::{SpfCacheActor, QueryCacheMessage};
+
 
 //------
 // Actor definition
 pub struct DnsResolverActor {
     resolver: Resolver,
+    spf_cache_addr: Addr<SpfCacheActor>
 }
 
 impl Actor for DnsResolverActor {
@@ -109,7 +112,7 @@ impl Handler<ResolveMxMessage> for DnsResolverActor {
 type FetchSfpRecordMessageResponse = Result<Spf, SpfFetchError>;
 
 pub struct FetchSfpRecordMessage {
-    dns_name: String,
+    pub dns_name: String,
 }
 
 impl Message for FetchSfpRecordMessage {
@@ -117,15 +120,29 @@ impl Message for FetchSfpRecordMessage {
 }
 
 impl Handler<FetchSfpRecordMessage> for DnsResolverActor {
-    type Result = FetchSfpRecordMessageResponse;
+    type Result = ResponseActFuture<Self, FetchSfpRecordMessageResponse>;
 
     fn handle(&mut self, msg: FetchSfpRecordMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        spf::fetch_and_parse(self.resolver, msg.dns_name)
+
+        let result = self.spf_cache_addr
+            .send(QueryCacheMessage{domain: msg.dns_name.to_owned() })
+            .into_actor(self)
+            .map(move |res, act, _ctx| {
+                match res.unwrap() {
+                    Some(record) => Ok(*record.clone()),
+                    None => spf::fetch_and_parse(&act.resolver, msg.dns_name.clone())
+                }
+            });
+
+        return Box::pin(result)
     }
 }
 
 //-----
 /// Primary function to start the DnsResolverActor Actor
-pub fn start_link() -> Addr<DnsResolverActor> {
-    return DnsResolverActor { resolver: Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap()}.start();
+pub fn start_link(spf_cache_addr: &Addr<SpfCacheActor> ) -> Addr<DnsResolverActor> {
+    return DnsResolverActor { 
+        resolver: Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap(),
+        spf_cache_addr: spf_cache_addr.clone(),
+    }.start();
 }
