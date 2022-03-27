@@ -3,7 +3,10 @@ use std::sync::Arc;
 use decon_spf::Spf;
 use trust_dns_resolver::{
     TokioAsyncResolver,
-    TokioHandle,
+    TokioHandle, 
+    error::{
+        ResolveErrorKind
+    }, proto::op::ResponseCode,
 };
 
 use crate::{SpfCache, spf::{self, SpfFetchError}};
@@ -32,6 +35,20 @@ pub async fn resolve_spf_record(domain: &String, resolver: &TokioAsyncResolver, 
                 });
             
             optional_spf_record
+        }
+    }
+}
+
+pub async fn is_domain_registered(resolver: &TokioAsyncResolver, domain: &String) -> bool {
+    match resolver.ns_lookup(domain).await {
+        Ok(_) => true,
+        Err(err) => {
+            match err.kind() {
+                ResolveErrorKind::NoRecordsFound {  response_code, ..} if *response_code == ResponseCode::NXDomain => {
+                    false
+                }
+                _ => true
+            }
         }
     }
 }
