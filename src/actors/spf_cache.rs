@@ -8,7 +8,7 @@ type QueryCacheResponse = Option<Arc<Spf>>;
 // Message to insert an item to the cache
 pub struct InsertCacheMessage {
     pub domain: String,
-    pub value: Spf,
+    pub value: Arc<Spf>,
 }
 impl Message for InsertCacheMessage {
     type Result = InsertCacheResponse;
@@ -34,7 +34,7 @@ impl Handler<InsertCacheMessage> for SpfCacheActor {
     type Result = InsertCacheResponse;
 
     fn handle(&mut self, msg: InsertCacheMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        self.cache.insert(msg.domain, Arc::new(msg.value));
+        self.cache.insert(msg.domain, msg.value);
     }
 }
 

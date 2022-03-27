@@ -10,6 +10,7 @@ use actors::resolver;
 
 #[actix::main]
 async fn main() {
+
     let args_matcher = parse_args();
 
     let spf_cache_addr = spf_cache::start_link();
@@ -23,9 +24,11 @@ async fn main() {
     match spf_record {
         Ok(record) => println!("SPF Record: {}", record.source()),
         Err(_error) => println!("Error")
-    }
+    };
+
 
     System::current().stop();
+
 }
 
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use actix::prelude::*;
 use decon_spf::Spf;
 use trust_dns_resolver::{
@@ -9,7 +11,7 @@ use trust_dns_resolver::{
 
 use crate::spf::{self, SpfFetchError};
 
-use super::spf_cache::{SpfCacheActor, QueryCacheMessage};
+use super::spf_cache::{SpfCacheActor, QueryCacheMessage, InsertCacheMessage};
 
 
 //------
@@ -109,7 +111,7 @@ impl Handler<ResolveMxMessage> for DnsResolverActor {
 
 //-----
 // Extract an SPF record for a domain
-type FetchSfpRecordMessageResponse = Result<Spf, SpfFetchError>;
+type FetchSfpRecordMessageResponse = Result<Arc<Spf>, SpfFetchError>;
 
 pub struct FetchSfpRecordMessage {
     pub dns_name: String,
@@ -129,8 +131,17 @@ impl Handler<FetchSfpRecordMessage> for DnsResolverActor {
             .into_actor(self)
             .map(move |res, act, _ctx| {
                 match res.unwrap() {
-                    Some(record) => Ok(*record.clone()),
-                    None => spf::fetch_and_parse(&act.resolver, msg.dns_name.clone())
+                    Some(record) => Ok(record),
+                    None => {
+                        match spf::fetch_and_parse(&act.resolver, msg.dns_name.clone()) {
+                            Ok(record) => {
+                                let record = Arc::new(record);
+                                act.spf_cache_addr.do_send(InsertCacheMessage{domain: msg.dns_name.to_owned(), value: Arc::clone(&record)});
+                                Ok(record)
+                            },
+                            Err(error) => Err(error)
+                        }
+                    }
                 }
             });
 
