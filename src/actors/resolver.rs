@@ -3,10 +3,10 @@ use std::sync::Arc;
 use actix::prelude::*;
 use decon_spf::Spf;
 use trust_dns_resolver::{
-    Resolver, 
+    TokioAsyncResolver, 
+    TokioHandle,
     lookup::*, 
     error::ResolveError, 
-    config::{ResolverConfig, ResolverOpts}
 };
 
 use crate::spf::{self, SpfFetchError};
@@ -17,7 +17,7 @@ use super::spf_cache::{SpfCacheActor, QueryCacheMessage, InsertCacheMessage};
 //------
 // Actor definition
 pub struct DnsResolverActor {
-    resolver: Resolver,
+    resolver: TokioAsyncResolver,
     spf_cache_addr: Addr<SpfCacheActor>
 }
 
@@ -42,10 +42,15 @@ impl Message for ResolveTxtMessage {
 }
 
 impl Handler<ResolveTxtMessage> for DnsResolverActor {
-    type Result = ResolveTxtMessageResponse;
+    type Result = ResponseActFuture<Self, ResolveTxtMessageResponse>;
 
     fn handle(&mut self, msg: ResolveTxtMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        return self.resolver.txt_lookup(msg.dns_name);
+        let resolver = self.resolver.clone();
+        let future = resolver
+            .txt_lookup(msg.dns_name)
+            .into_actor(self);
+
+        return Box::pin(future)
     }
 }
 
@@ -62,10 +67,15 @@ impl Message for ResolveAMessage {
 }
 
 impl Handler<ResolveAMessage> for DnsResolverActor {
-    type Result = ResolveAMessageResponse;
+    type Result = ResponseActFuture<Self, ResolveAMessageResponse>;
 
     fn handle(&mut self, msg: ResolveAMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        return self.resolver.ipv4_lookup(msg.dns_name);
+        let resolver = self.resolver.clone();
+        let future = resolver
+            .ipv4_lookup(msg.dns_name)
+            .into_actor(self);
+
+        return Box::pin(future);
     }
 }
 
@@ -82,10 +92,15 @@ impl Message for ResolveAaaaMessage {
 }
 
 impl Handler<ResolveAaaaMessage> for DnsResolverActor {
-    type Result = ResolveAaaaMessageResponse;
+    type Result = ResponseActFuture<Self, ResolveAaaaMessageResponse>;
 
     fn handle(&mut self, msg: ResolveAaaaMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        return self.resolver.ipv6_lookup(msg.dns_name);
+        let resolver = self.resolver.clone();
+        let future = resolver
+            .ipv6_lookup(msg.dns_name)
+            .into_actor(self);
+        
+            return Box::pin(future)
     }
 }
 
@@ -102,10 +117,15 @@ impl Message for ResolveMxMessage {
 }
 
 impl Handler<ResolveMxMessage> for DnsResolverActor {
-    type Result = ResolveMxMessageResponse;
+    type Result = ResponseActFuture<Self, ResolveMxMessageResponse>;
 
     fn handle(&mut self, msg: ResolveMxMessage, _ctx: &mut Context<Self>) -> Self::Result {
-        return self.resolver.mx_lookup(msg.dns_name);
+        let resolver = self.resolver.clone();
+        let future = resolver
+            .mx_lookup(msg.dns_name)
+            .into_actor(self);
+
+        return Box::pin(future)
     }
 }
 
@@ -153,7 +173,7 @@ impl Handler<FetchSfpRecordMessage> for DnsResolverActor {
 /// Primary function to start the DnsResolverActor Actor
 pub fn start_link(spf_cache_addr: &Addr<SpfCacheActor> ) -> Addr<DnsResolverActor> {
     return DnsResolverActor { 
-        resolver: Resolver::new(ResolverConfig::default(), ResolverOpts::default()).unwrap(),
+        resolver: TokioAsyncResolver::from_system_conf(TokioHandle).unwrap(),
         spf_cache_addr: spf_cache_addr.clone(),
     }.start();
 }
