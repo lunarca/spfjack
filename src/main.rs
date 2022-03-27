@@ -1,4 +1,5 @@
 mod spf;
+mod dns;
 
 use clap::{Arg, App, ArgMatches};
 
@@ -8,6 +9,9 @@ async fn main() {
 
     let args_matcher = parse_args();
 
+    let domain = String::from(args_matcher.value_of("domain").unwrap());
+
+    let resolver = dns::dns_resolver::new_resolver();
 
 }
 
