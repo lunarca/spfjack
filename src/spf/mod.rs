@@ -30,6 +30,7 @@ fn select_spf_record(txt_records: TxtLookup) -> Result<Spf, SpfFetchError> {
   return Err(SpfFetchError::NoSpfRecords)
 }
 
+#[derive(Debug)]
 pub enum SpfFetchError {
   NoTxtRecords,
   NoSpfRecords,
