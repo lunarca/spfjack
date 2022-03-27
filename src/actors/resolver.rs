@@ -153,14 +153,18 @@ impl Handler<FetchSfpRecordMessage> for DnsResolverActor {
                 match res.unwrap() {
                     Some(record) => Ok(record),
                     None => {
-                        match spf::fetch_and_parse(&act.resolver, msg.dns_name.clone()) {
-                            Ok(record) => {
-                                let record = Arc::new(record);
-                                act.spf_cache_addr.do_send(InsertCacheMessage{domain: msg.dns_name.to_owned(), value: Arc::clone(&record)});
-                                Ok(record)
-                            },
-                            Err(error) => Err(error)
-                        }
+                        let future = spf::fetch_and_parse(&act.resolver, msg.dns_name.clone()) ;
+                        
+                        future.and_then(|record| {
+                            match record {
+                                Ok(record) => {
+                                    let record = Arc::new(record);
+                                    act.spf_cache_addr.do_send(InsertCacheMessage{domain: msg.dns_name.to_owned(), value: Arc::clone(&record)});
+                                    Ok(record)
+                                },
+                                Err(error) => Err(error)
+                            }
+                        })
                     }
                 }
             });

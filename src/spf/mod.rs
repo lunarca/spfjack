@@ -1,16 +1,17 @@
 use decon_spf::{Spf, SpfError};
-use trust_dns_resolver::Resolver;
+use trust_dns_resolver::TokioAsyncResolver;
 use trust_dns_resolver::lookup::TxtLookup;
 
 pub mod processing_results;
 
-pub fn fetch_and_parse(resolver: &Resolver, domain: String) -> Result<Spf, SpfFetchError> {
+pub async fn fetch_and_parse(resolver: &TokioAsyncResolver, domain: String) -> Result<Spf, SpfFetchError> {
   fetch_txt_records(resolver, domain)
+    .await
     .and_then(select_spf_record)
 }
 
-fn fetch_txt_records(resolver: &Resolver, domain: String) -> Result<TxtLookup, SpfFetchError> {
-  match resolver.txt_lookup(domain) {
+async fn fetch_txt_records(resolver: &TokioAsyncResolver, domain: String) -> Result<TxtLookup, SpfFetchError> {
+  match resolver.txt_lookup(domain).await {
     Err(_) => Err(SpfFetchError::NoTxtRecords),
     Ok(txt_record) => Ok(txt_record)
   }
