@@ -10,3 +10,4 @@ trust-dns-resolver = "0.21.1"
 decon-spf = "0.2.4"
 clap = "3.0.14"
 tokio = {version="1", features=["full"]}
+regex = "1"
