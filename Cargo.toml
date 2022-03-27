@@ -9,4 +9,4 @@ edition = "2018"
 trust-dns-resolver = "0.21.1"
 decon-spf = "0.2.4"
 clap = "3.0.14"
-actix = "0.13.0"
+tokio = {version="1", features=["full"]}
