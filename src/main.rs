@@ -27,9 +27,12 @@ async fn main() {
 
     let resolver = new_resolver();
 
-    let record = resolve_spf_record(&domain, &resolver, cache).await.unwrap();
+    let record = resolve_spf_record(&domain, &resolver, cache).await;
 
-    println!("Fetched record: {}", record.to_string());
+    match record {
+        Err(err) => println!("Error: {:?}", err),
+        Ok(record) => println!("Got SPF Record: {}", record.to_string()),
+    }
 
 }
 
