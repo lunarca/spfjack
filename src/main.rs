@@ -12,10 +12,16 @@ use dns::dns_resolver::{
     resolve_spf_record,
 };
 
+extern crate pretty_env_logger;
+#[macro_use] extern crate log;
+
 pub type SpfCache = Arc<Mutex<HashMap<String, Arc<Spf>>>>;
 
 #[tokio::main]
 async fn main() {
+
+    // Initialize the logger
+    pretty_env_logger::init();
 
     let args_matcher = parse_args();
 
