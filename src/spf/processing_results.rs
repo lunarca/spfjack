@@ -33,9 +33,9 @@ pub async fn process_spf_record(resolver: &TokioAsyncResolver, spf: Arc<Spf>) ->
         None => vec![]
     };
 
+    let all_mechanism_results = spf.all().and_then(process_all_mechanism);
 
     include_mechanism_results
-    
 }
 
 async fn process_include_mechanisms(resolver: &TokioAsyncResolver, mechanisms: &Vec<Mechanism<String>>) -> Vec<MechanismProcessingResult> {
@@ -73,4 +73,19 @@ pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, mechanism:
     }
 
     
+}
+
+pub fn process_all_mechanism(mechanism: &Mechanism<String>) -> Option<MechanismProcessingResult> {
+    trace!("Calling process_all_mechanism with {}", mechanism.to_string());
+    if mechanism.is_pass() && matches!(mechanism.kind(), Kind::All) {
+        info!("Found a +all mechanism");
+        return Some(MechanismProcessingResult{
+            mechanism_type: Kind::All,
+            mechanism: mechanism.to_string(),
+            issue: MisconfigType::PlusAll
+        });
+    } else {
+        info!("No +all mechanism");
+        None
+    }
 }
