@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use decon_spf::{mechanism::Mechanism, Spf};
+use decon_spf::{mechanism::{Mechanism, Kind}, Spf};
 
 use futures::future::join_all;
 use trust_dns_resolver::TokioAsyncResolver;
@@ -9,23 +9,11 @@ use crate::dns::dns_resolver::is_domain_registered;
 
 #[derive(Debug)]
 pub struct MechanismProcessingResult {
-    mechanism_type: MechanismType,
+    mechanism_type: Kind,
     issue: MisconfigType,
     mechanism: String
 }
 
-#[derive(Debug)]
-pub enum MechanismType {
-    All,
-    Ip4,
-    Ip6,
-    A,
-    Mx,
-    Ptr,
-    Exists,
-    Include,
-    Redirect,
-}
 
 #[derive(Debug)]
 pub enum MisconfigType {
@@ -72,7 +60,7 @@ pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, mechanism:
             } else {
                 info!("Include domain `{}` not registered. Returning as a processing result.", domain);
                 return vec![MechanismProcessingResult{
-                    mechanism_type: MechanismType::Include,
+                    mechanism_type: Kind::Include,
                     issue: MisconfigType::UnregisteredDomain(domain.to_owned()),
                     mechanism: mechanism.to_string()
                 }]
