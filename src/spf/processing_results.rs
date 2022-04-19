@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, rc::Rc};
 
 use decon_spf::{mechanism::{Mechanism, Kind}, Spf};
 
@@ -9,7 +9,7 @@ use crate::dns::dns_resolver::is_domain_registered;
 
 use super::SpfFetchError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MechanismProcessingResult {
     pub mechanism_type: Option<Kind>,
     pub issue: MisconfigType,
@@ -18,7 +18,7 @@ pub struct MechanismProcessingResult {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum MisconfigType {
     /// Mechanism is +all
     PlusAll,
@@ -56,14 +56,27 @@ pub async fn process_spf_record(resolver: &TokioAsyncResolver, domain: String, s
 
     let include_mechanisms = spf.includes();
     let include_mechanism_results = match include_mechanisms {
-        Some(include_mechanisms) => process_include_mechanisms(resolver, domain.clone(), include_mechanisms).await,
-        None => vec![]
+        Some(include_mechanisms) => Some(process_include_mechanisms(resolver, domain.clone(), include_mechanisms).await),
+        None => None
     };
 
     let all_mechanism_domain = domain.clone();
     let all_mechanism_results = spf.all().and_then(move |mechanism| process_all_mechanism(all_mechanism_domain, mechanism));
 
-    include_mechanism_results
+    let all_results = vec!(
+        include_mechanism_results,
+        all_mechanism_results,
+    );
+
+    let filtered_results = all_results
+        .iter()
+        .flatten()
+        .flatten()
+        .map(|element| element.clone())
+        .collect();
+
+    return filtered_results
+    
 }
 
 async fn process_include_mechanisms(resolver: &TokioAsyncResolver, domain: String, mechanisms: &Vec<Mechanism<String>>) -> Vec<MechanismProcessingResult> {
@@ -104,16 +117,16 @@ pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, domain: St
     
 }
 
-pub fn process_all_mechanism(domain: String, mechanism: &Mechanism<String>) -> Option<MechanismProcessingResult> {
+pub fn process_all_mechanism(domain: String, mechanism: &Mechanism<String>) -> Option<Vec<MechanismProcessingResult>> {
     trace!("Calling process_all_mechanism with {}", mechanism.to_string());
     if mechanism.is_pass() && matches!(mechanism.kind(), Kind::All) {
         info!("Found a +all mechanism");
-        return Some(MechanismProcessingResult{
+        return Some(vec!(MechanismProcessingResult{
             mechanism_type: Some(Kind::All),
             mechanism: mechanism.to_string(),
             issue: MisconfigType::PlusAll,
             domain: domain.clone()
-        });
+        }));
     } else {
         info!("No +all mechanism");
         None
