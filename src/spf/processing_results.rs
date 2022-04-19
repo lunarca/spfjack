@@ -60,8 +60,8 @@ pub async fn process_spf_record(resolver: &TokioAsyncResolver, domain: String, s
         None => vec![]
     };
 
-    let allMechanismDomain = domain.clone();
-    let all_mechanism_results = spf.all().and_then(move |mechanism| process_all_mechanism(allMechanismDomain, mechanism));
+    let all_mechanism_domain = domain.clone();
+    let all_mechanism_results = spf.all().and_then(move |mechanism| process_all_mechanism(all_mechanism_domain, mechanism));
 
     include_mechanism_results
 }
