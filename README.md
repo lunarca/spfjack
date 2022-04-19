@@ -8,6 +8,8 @@ Email spoofing is dead, but misconfiguration never dies.
 This project is designed to take in domain names and review their SPF records for any issues that could result in email spoofing becoming possible. 
 
 The list of planned misconfigurations is as follows:
+- No SPF record existing. Without an SPF record, an MTA can't determine if an email is legitimately sent.
+    - Note: This misconfiguration may need testing to see if it's accurate.
 - `+all` mechanism existing.
 - `ip4`, `ip6`, or `a` mechanisms with hosts containing open SMTP relays.
 - `a`, `mx`, and `ptr` mechanisms for domains that are not registered.

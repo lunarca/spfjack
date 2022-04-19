@@ -22,7 +22,9 @@ pub enum MisconfigType {
     /// Mechanism points to an open relay
     OpenRelay(String), //Consider union type of DNS name or IP4/6 address
     /// Mechanism points to an unregistered domain
-    UnregisteredDomain(String) 
+    UnregisteredDomain(String),
+    /// No SPF record
+    NoSpfRecord
 }
 
 pub async fn process_spf_record(resolver: &TokioAsyncResolver, spf: Arc<Spf>) -> Vec<MechanismProcessingResult> {
