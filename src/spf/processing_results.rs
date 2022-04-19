@@ -11,7 +11,8 @@ use crate::dns::dns_resolver::is_domain_registered;
 pub struct MechanismProcessingResult {
     mechanism_type: Kind,
     issue: MisconfigType,
-    mechanism: String
+    mechanism: String,
+    domain: String,
 }
 
 
@@ -27,30 +28,31 @@ pub enum MisconfigType {
     NoSpfRecord
 }
 
-pub async fn process_spf_record(resolver: &TokioAsyncResolver, spf: Arc<Spf>) -> Vec<MechanismProcessingResult> {
+pub async fn process_spf_record(resolver: &TokioAsyncResolver, domain: String, spf: Arc<Spf>) -> Vec<MechanismProcessingResult> {
 
     let include_mechanisms = spf.includes();
     let include_mechanism_results = match include_mechanisms {
-        Some(include_mechanisms) => process_include_mechanisms(resolver, include_mechanisms).await,
+        Some(include_mechanisms) => process_include_mechanisms(resolver, domain.clone(), include_mechanisms).await,
         None => vec![]
     };
 
-    let all_mechanism_results = spf.all().and_then(process_all_mechanism);
+    let allMechanismDomain = domain.clone();
+    let all_mechanism_results = spf.all().and_then(move |mechanism| process_all_mechanism(allMechanismDomain, mechanism));
 
     include_mechanism_results
 }
 
-async fn process_include_mechanisms(resolver: &TokioAsyncResolver, mechanisms: &Vec<Mechanism<String>>) -> Vec<MechanismProcessingResult> {
+async fn process_include_mechanisms(resolver: &TokioAsyncResolver, domain: String, mechanisms: &Vec<Mechanism<String>>) -> Vec<MechanismProcessingResult> {
     join_all(mechanisms
         .iter()
-        .map(|mechanism| process_include_mechanism(resolver, mechanism))
+        .map(|mechanism| process_include_mechanism(resolver, domain.clone(),  mechanism))
     ).await
     .into_iter()
     .flatten()
     .collect()
 }
 
-pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, mechanism: &Mechanism<String>) -> Vec<MechanismProcessingResult> {
+pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, domain: String, mechanism: &Mechanism<String>) -> Vec<MechanismProcessingResult> {
     info!("Processing include mechanism: `{}`", mechanism.to_string());
 
     match mechanism.mechanism() {
@@ -64,7 +66,8 @@ pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, mechanism:
                 return vec![MechanismProcessingResult{
                     mechanism_type: Kind::Include,
                     issue: MisconfigType::UnregisteredDomain(domain.to_owned()),
-                    mechanism: mechanism.to_string()
+                    mechanism: mechanism.to_string(),
+                    domain: domain.clone()
                 }]
             }
             }
@@ -77,14 +80,15 @@ pub async fn process_include_mechanism(resolver: &TokioAsyncResolver, mechanism:
     
 }
 
-pub fn process_all_mechanism(mechanism: &Mechanism<String>) -> Option<MechanismProcessingResult> {
+pub fn process_all_mechanism(domain: String, mechanism: &Mechanism<String>) -> Option<MechanismProcessingResult> {
     trace!("Calling process_all_mechanism with {}", mechanism.to_string());
     if mechanism.is_pass() && matches!(mechanism.kind(), Kind::All) {
         info!("Found a +all mechanism");
         return Some(MechanismProcessingResult{
             mechanism_type: Kind::All,
             mechanism: mechanism.to_string(),
-            issue: MisconfigType::PlusAll
+            issue: MisconfigType::PlusAll,
+            domain: domain.clone()
         });
     } else {
         info!("No +all mechanism");

@@ -42,7 +42,7 @@ async fn main() {
         Ok(record) => {
             println!("Got SPF Record: {}", record.to_string());
             println!("Starting to process data.");
-            let processing_results = process_spf_record(&resolver, record).await;
+            let processing_results = process_spf_record(&resolver, domain.clone(), record).await;
             println!("Results: {:#?}", processing_results);
         }
 
