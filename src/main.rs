@@ -12,7 +12,7 @@ use dns::dns_resolver::{
     resolve_spf_record,
 };
 
-use crate::spf::processing_results::process_spf_record;
+use crate::spf::processing_results::{ process_spf_record_result};
 
 extern crate pretty_env_logger;
 #[macro_use] extern crate log;
@@ -37,16 +37,8 @@ async fn main() {
 
     let record = resolve_spf_record(&domain, &resolver, cache).await;
 
-    match record {
-        Err(err) => println!("Error: {:?}", err),
-        Ok(record) => {
-            println!("Got SPF Record: {}", record.to_string());
-            println!("Starting to process data.");
-            let processing_results = process_spf_record(&resolver, domain.clone(), record).await;
-            println!("Results: {:#?}", processing_results);
-        }
-
-    }
+    let results = process_spf_record_result(resolver, record, domain).await;    
+    println!("Results: {:?}", results);
 
 }
 
